@@ -7,9 +7,14 @@
             "type": "process",
             "args": [
                 "build",
+                "--no-restore",
                 "${workspaceFolder}/AuthN/AuthN.csproj"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

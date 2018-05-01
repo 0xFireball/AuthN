@@ -34,6 +34,8 @@ namespace AuthN.Configuration {
             persistNeeded = true;
         }
 
+        public List<string> inviteKeys = new List<string>();
+
         public Dictionary<string, UserMetrics> userMetrics { get; set; } = new Dictionary<string, UserMetrics>();
     }
 }

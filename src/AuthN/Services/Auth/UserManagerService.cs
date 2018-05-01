@@ -18,41 +18,40 @@ namespace AuthN.Services.Auth {
         }
 
         public async Task<RegisteredUser> registerUserAsync(UserRegistrationRequest regRequest) {
-            if (await findUserByUsernameAsync(regRequest.username) != null)
+            if (await findUserByUsernameAsync(regRequest.username) != null) {
                 throw new SecurityException("a user with the same username already exists");
-            return await Task.Run(async () => {
-                // Calculate cryptographic info
-                var cryptoConf = PasswordCryptoConfiguration.createDefault();
-                var cryptoHelper = new AuthCryptoHelper(cryptoConf);
-                var pwSalt = cryptoHelper.generateSalt();
-                var encryptedPassword =
-                    cryptoHelper.calculateUserPasswordHash(regRequest.password, pwSalt);
-                // Create user
-                var user = new RegisteredUser {
-                    identifier = Guid.NewGuid().ToString(),
-                    username = regRequest.username,
-                    email = regRequest.email,
-                    apiKey = StringUtils.secureRandomString(AuthCryptoHelper.DEFAULT_API_KEY_LENGTH),
-                    crypto = new ItemCrypto {
-                        salt = pwSalt,
-                        conf = cryptoConf,
-                        key = encryptedPassword
-                    },
-                    enabled = true
-                };
+            }
+            // Calculate cryptographic info
+            var cryptoConf = PasswordCryptoConfiguration.createDefault();
+            var cryptoHelper = new AuthCryptoHelper(cryptoConf);
+            var pwSalt = cryptoHelper.generateSalt();
+            var encryptedPassword =
+                cryptoHelper.calculateUserPasswordHash(regRequest.password, pwSalt);
+            // Create user
+            var user = new RegisteredUser {
+                identifier = Guid.NewGuid().ToString(),
+                username = regRequest.username,
+                email = regRequest.email,
+                apiKey = StringUtils.secureRandomString(AuthCryptoHelper.DEFAULT_API_KEY_LENGTH),
+                crypto = new ItemCrypto {
+                    salt = pwSalt,
+                    conf = cryptoConf,
+                    key = encryptedPassword
+                },
+                enabled = true
+            };
 
-                // Add the user to the database
-                _userCollection.Insert(user);
+            // Add the user to the database
+            _userCollection.Insert(user);
 
-                // Index database
-                _userCollection.EnsureIndex(x => x.identifier);
-                _userCollection.EnsureIndex(x => x.apiKey);
-                _userCollection.EnsureIndex(x => x.username);
+            // Index database
+            _userCollection.EnsureIndex(x => x.identifier);
+            _userCollection.EnsureIndex(x => x.apiKey);
+            _userCollection.EnsureIndex(x => x.username);
 
-                serverContext.appState.userMetrics[user.identifier] = new UserMetrics();
+            serverContext.appState.userMetrics[user.identifier] = new UserMetrics();
 
-                return user;
-            });
+            return user;
         }
 
         public async Task<RegisteredUser> findUserByApiKeyAsync(string apikey) {
@@ -111,14 +110,12 @@ namespace AuthN.Services.Auth {
             }));
         }
 
-        public async Task deleteUserAsync(string userId) {
-            await Task.Run(async () => {
-                _userCollection.Delete(x => x.identifier == userId);
-
+        public Task<bool> deleteUserAsync(string userId) {
+            var result = _userCollection.Delete(x => x.identifier == userId) > 0;
+            if (result) {
                 serverContext.appState.userMetrics.Remove(userId);
-
-                // TODO: Purge all entities
-            });
+            }
+            return Task.FromResult(result);
         }
 
         public async Task generateNewApiKeyAsync(RegisteredUser user) {
