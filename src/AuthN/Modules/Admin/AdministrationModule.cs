@@ -12,11 +12,11 @@ namespace AuthN.Modules.Admin {
         private UserManagerService userManager;
 
         public AdministrationModule(ISContext serverContext) : base("/admin", serverContext) {
+            this.assertClaims(serverContext, TokenAuthService.CLAIM_ADMIN);
             Before += ctx => {
                 userManager = new UserManagerService(serverContext);
                 return null;
             };
-            this.assertClaims(serverContext, TokenAuthService.CLAIM_ADMIN);
             
             Get("/user/{id}", async args => {
                 var user = await userManager.findUserByIdentifierAsync((string) args.id);
