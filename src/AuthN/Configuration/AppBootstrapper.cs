@@ -16,23 +16,6 @@ namespace AuthN {
         protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines) {
             base.ApplicationStartup(container, pipelines);
 
-            // Enable stateless authentication
-            StatelessAuthentication.Enable(pipelines, new StatelessAuthenticationConfiguration(ctx => {
-                // Take API key from query string
-                var apikey = (string) ctx.Request.Query.apikey.Value;
-                if (apikey == null) // key wasn't in query, check alternate sources
-                {
-                    var authHeader = ctx.Request.Headers.Authorization;
-                    if (!string.IsNullOrWhiteSpace(authHeader)) {
-                        apikey = authHeader;
-                    }
-                }
-
-                // Call authenticator
-                var auther = new ApiAuthenticator(serverContext);
-                return auther.resolveIdentity(apikey);
-            }));
-
             // Enable CORS
             pipelines.AfterRequest.AddItemToEndOfPipeline(ctx => {
                 foreach (var origin in serverContext.configuration.corsOrigins) {

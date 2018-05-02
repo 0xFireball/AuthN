@@ -1,4 +1,5 @@
 using AuthN.Services.Application;
+using AuthN.Utilities;
 using Newtonsoft.Json;
 
 namespace AuthN.Configuration {
@@ -23,6 +24,12 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("adminKeys")]
         public string[] adminKeys { get; set; } = new string[0];
+        
+        /// <summary>
+        /// JWT secret
+        /// </summary>
+        [JsonProperty("jwtSecret")]
+        public string jwtSecret { get; set; } = StringUtils.secureRandomString(128);
 
         /// <summary>
         /// List of origins to allow CORS requests from. Can possibly be used to enable API access from another domain hosting a custom client.

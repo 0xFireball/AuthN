@@ -11,12 +11,13 @@ using Microsoft.Extensions.Logging;
 namespace AuthN {
     public class Program {
         public static void Main(string[] args) {
-            BuildWebHost(args).Run();
+            buildWebHost(args).Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args) {
-            return (IWebHost) WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+        public static IWebHost buildWebHost(string[] args) {
+            return WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .Build();
         }
     }
 }

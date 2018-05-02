@@ -5,6 +5,7 @@ using Nancy;
 using Nancy.ModelBinding;
 using AuthN.Configuration;
 using AuthN.Models.Requests.User;
+using AuthN.Models.User;
 using AuthN.Modules.Exceptions;
 using AuthN.Services.Application;
 using AuthN.Services.Auth;
@@ -13,10 +14,17 @@ using AuthN.Utilities;
 namespace AuthN.Modules.Auth {
     public class AuthenticationModule : SBaseModule {
         private UserManagerService _userManager;
+        private TokenAuthService _tokenAuth;
+
+        public Response bundleAuthorization(UserIdentity user) {
+            var token = _tokenAuth.createToken(user);
+            return Response.asJsonNet(token);
+        }
 
         public AuthenticationModule(ISContext serverContext) : base("/auth", serverContext) {
             Before += ctx => {
-                _userManager = new UserManagerService(this.serverContext);
+                _userManager = new UserManagerService(serverContext);
+                _tokenAuth = new TokenAuthService(serverContext);
                 return null;
             };
 
@@ -28,7 +36,7 @@ namespace AuthN.Modules.Auth {
 
                 try {
                     if (this.serverContext.configuration.maxUsers > -1 &&
-                        _userManager.registeredUserCount >= this.serverContext.configuration.maxUsers) {
+                        _userManager.UserIdentityCount >= this.serverContext.configuration.maxUsers) {
                         throw new SecurityException("Maximum number of users for this server reached");
                     }
 
@@ -55,16 +63,16 @@ namespace AuthN.Modules.Auth {
                     }
 
                     // Attempt to register user
-                    var newUser = await _userManager.registerUserAsync(req);
+                    var user = await _userManager.registerUserAsync(req);
 
-                    serverContext.log.writeLine($"Registered user {newUser.username} [{newUser.identifier}]",
+                    serverContext.log.writeLine($"Registered user {user.username} [{user.identifier}]",
                         SLogger.LogLevel.Information);
 
                     // queue persist
                     this.serverContext.appState.queuePersist();
 
                     // Return user details
-                    return Response.asJsonNet(newUser);
+                    return bundleAuthorization(user);
                 } catch (NullReferenceException) {
                     return HttpStatusCode.BadRequest;
                 } catch (SecurityException sx) {
@@ -87,7 +95,7 @@ namespace AuthN.Modules.Auth {
                     // Validate password
                     if (user.enabled && await _userManager.checkPasswordAsync(req.password, user)) {
                         // Return user details
-                        return Response.asJsonNet(user);
+                        return bundleAuthorization(user);
                     }
 
                     return HttpStatusCode.Unauthorized;
@@ -157,57 +165,6 @@ namespace AuthN.Modules.Auth {
                 } catch (InvalidParameterException ex) {
                     return Response.AsText(ex.Message)
                         .WithStatusCode(HttpStatusCode.UnprocessableEntity);
-                }
-            });
-
-            // Authenticate with API key (used to validate a key during auto-login)
-            Post("/reauth", async args => {
-                var req = this.Bind<UserReauthRequest>();
-                var user = await _userManager.findUserByUsernameAsync(req.username);
-
-                if (user == null) return HttpStatusCode.Unauthorized;
-
-                try {
-                    // Validate key
-                    if (user.enabled && user.apiKey == req.apiKey) {
-                        // Return user details
-                        return Response.asJsonNet(user);
-                    }
-
-                    return HttpStatusCode.Unauthorized;
-                } catch (NullReferenceException) {
-                    // A parameter was not provided
-                    return HttpStatusCode.BadRequest;
-                } catch (SecurityException ex) {
-                    // Blocked for security reasons
-                    return Response.AsText(ex.Message)
-                        .WithStatusCode(HttpStatusCode.Unauthorized);
-                }
-            });
-
-            // Request generation of a new API key
-            Patch("/newkey", async _ => {
-                var req = this.Bind<UserKeyResetRequest>();
-                var user = await _userManager.findUserByUsernameAsync(req.username);
-
-                if (user == null) return HttpStatusCode.Unauthorized;
-
-                try {
-                    // Validate key
-                    if (user.enabled && user.apiKey == req.apiKey) {
-                        // Update key
-                        await _userManager.generateNewApiKeyAsync(user);
-                        return HttpStatusCode.NoContent;
-                    }
-
-                    return HttpStatusCode.Unauthorized;
-                } catch (NullReferenceException) {
-                    // A parameter was not provided
-                    return HttpStatusCode.BadRequest;
-                } catch (SecurityException ex) {
-                    // Blocked for security reasons
-                    return Response.AsText(ex.Message)
-                        .WithStatusCode(HttpStatusCode.Unauthorized);
                 }
             });
         }

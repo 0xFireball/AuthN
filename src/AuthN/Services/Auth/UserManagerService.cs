@@ -11,13 +11,13 @@ using AuthN.Utilities;
 namespace AuthN.Services.Auth {
     public class UserManagerService : DependencyObject {
         public const string REGISTERED_USERS_KEY = "r_users";
-        private LiteCollection<RegisteredUser> _userCollection;
+        private LiteCollection<UserIdentity> _userCollection;
 
         public UserManagerService(ISContext serverContext) : base(serverContext) {
-            _userCollection = serverContext.database.GetCollection<RegisteredUser>(REGISTERED_USERS_KEY);
+            _userCollection = serverContext.database.GetCollection<UserIdentity>(REGISTERED_USERS_KEY);
         }
 
-        public async Task<RegisteredUser> registerUserAsync(UserRegistrationRequest regRequest) {
+        public async Task<UserIdentity> registerUserAsync(UserRegistrationRequest regRequest) {
             if (await findUserByUsernameAsync(regRequest.username) != null) {
                 throw new SecurityException("a user with the same username already exists");
             }
@@ -28,11 +28,10 @@ namespace AuthN.Services.Auth {
             var encryptedPassword =
                 cryptoHelper.calculateUserPasswordHash(regRequest.password, pwSalt);
             // Create user
-            var user = new RegisteredUser {
+            var user = new UserIdentity {
                 identifier = Guid.NewGuid().ToString(),
                 username = regRequest.username,
                 email = regRequest.email,
-                apiKey = StringUtils.secureRandomString(AuthCryptoHelper.DEFAULT_API_KEY_LENGTH),
                 crypto = new ItemCrypto {
                     salt = pwSalt,
                     conf = cryptoConf,
@@ -46,7 +45,6 @@ namespace AuthN.Services.Auth {
 
             // Index database
             _userCollection.EnsureIndex(x => x.identifier);
-            _userCollection.EnsureIndex(x => x.apiKey);
             _userCollection.EnsureIndex(x => x.username);
 
             serverContext.appState.userMetrics[user.identifier] = new UserMetrics();
@@ -54,15 +52,11 @@ namespace AuthN.Services.Auth {
             return user;
         }
 
-        public async Task<RegisteredUser> findUserByApiKeyAsync(string apikey) {
-            return await Task.Run(() => (_userCollection.FindOne(x => x.apiKey == apikey)));
-        }
-
-        public async Task<RegisteredUser> findUserByUsernameAsync(string username) {
+        public async Task<UserIdentity> findUserByUsernameAsync(string username) {
             return await Task.Run(() => (_userCollection.FindOne(x => x.username == username)));
         }
 
-        public async Task<RegisteredUser> findUserByIdentifierAsync(string id) {
+        public async Task<UserIdentity> findUserByIdentifierAsync(string id) {
             return await Task.Run(() => (_userCollection.FindOne(x => x.identifier == id)));
         }
 
@@ -71,11 +65,11 @@ namespace AuthN.Services.Auth {
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<bool> updateUserInDatabaseAsync(RegisteredUser user) {
+        public async Task<bool> updateUserInDatabaseAsync(UserIdentity user) {
             return await Task.Run(() => _userCollection.Update(user));
         }
 
-        public async Task<bool> checkPasswordAsync(string password, RegisteredUser user) {
+        public async Task<bool> checkPasswordAsync(string password, UserIdentity user) {
             var ret = false;
             var lockEntry = serverContext.serviceTable.getOrCreate(user.username).userLock;
             await lockEntry.withConcurrentReadAsync(Task.Run(() => {
@@ -88,7 +82,7 @@ namespace AuthN.Services.Auth {
             return ret;
         }
 
-        public async Task changeUserPasswordAsync(RegisteredUser user, string newPassword) {
+        public async Task changeUserPasswordAsync(UserIdentity user, string newPassword) {
             var lockEntry = serverContext.serviceTable.getOrCreate(user.username).userLock;
             await lockEntry.withExclusiveWriteAsync(Task.Run(async () => {
                 // Recompute password crypto
@@ -102,8 +96,6 @@ namespace AuthN.Services.Auth {
                     conf = cryptoConf,
                     key = encryptedPassword
                 };
-                // regenerate key to invalidate old sessions
-                await generateNewApiKeyAsync(user);
 
                 // Save changes
                 await updateUserInDatabaseAsync(user);
@@ -118,16 +110,7 @@ namespace AuthN.Services.Auth {
             return Task.FromResult(result);
         }
 
-        public async Task generateNewApiKeyAsync(RegisteredUser user) {
-            var lockEntry = serverContext.serviceTable.getOrCreate(user.username).userLock;
-            await lockEntry.withExclusiveWriteAsync(Task.Run(async () => {
-                // Recompute key
-                user.apiKey = StringUtils.secureRandomString(AuthCryptoHelper.DEFAULT_API_KEY_LENGTH);
-                await updateUserInDatabaseAsync(user);
-            }));
-        }
-
-        public async Task setEnabledAsync(RegisteredUser user, bool status) {
+        public async Task setEnabledAsync(UserIdentity user, bool status) {
             var lockEntry = serverContext.serviceTable.getOrCreate(user.username).userLock;
             await lockEntry.obtainExclusiveWriteAsync();
             user.enabled = status;
@@ -135,6 +118,6 @@ namespace AuthN.Services.Auth {
             lockEntry.releaseExclusiveWrite();
         }
 
-        public int registeredUserCount => _userCollection.Count();
+        public int UserIdentityCount => _userCollection.Count();
     }
 }
