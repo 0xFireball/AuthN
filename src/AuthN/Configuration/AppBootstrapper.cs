@@ -17,7 +17,9 @@ namespace AuthN {
             base.ApplicationStartup(container, pipelines);
 
             // Authorization token support
-            AuthenticationHook.install(pipelines, new RS384Algorithm(serverContext.configuration.crypto));
+            AuthenticationHook.install(pipelines, new[] {
+                new RS384Algorithm(serverContext.configuration.crypto)
+            });
 
             // Enable CORS
             pipelines.AfterRequest.AddItemToEndOfPipeline(ctx => {
