@@ -1,10 +1,8 @@
 using System.Linq;
 using System.Security.Claims;
 using AuthN.Configuration;
-using AuthN.Services.Auth;
 using AuthN.Services.Auth.Crypto;
 using Nancy;
-using Nancy.Authentication.Stateless;
 using Nancy.Bootstrapper;
 using Nancy.TinyIoc;
 

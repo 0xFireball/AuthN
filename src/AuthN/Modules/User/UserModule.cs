@@ -23,7 +23,8 @@ namespace AuthN.Modules.User {
                 new UserMetricsService(serverContext,
                         ctx.CurrentUser.getClaim(TokenAuthService.CLAIM_IDENTIFIER))
                     .logEvent(MetricsEventType.UserApi);
-                user = userManager.findUserByIdentifierAsync(ctx.CurrentUser.getClaim(TokenAuthService.CLAIM_IDENTIFIER))
+                user = userManager
+                    .findUserByIdentifierAsync(ctx.CurrentUser.getClaim(TokenAuthService.CLAIM_IDENTIFIER))
                     .Result;
                 return null;
             };

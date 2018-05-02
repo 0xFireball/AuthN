@@ -17,12 +17,12 @@ namespace AuthN.Modules.Admin {
                 userManager = new UserManagerService(serverContext);
                 return null;
             };
-            
+
             Get("/user/{id}", async args => {
                 var user = await userManager.findUserByIdentifierAsync((string) args.id);
                 return Response.asJsonNet(user);
             });
-            
+
             Put("/user/{id}", async args => {
                 var user = await userManager.findUserByIdentifierAsync((string) args.id);
                 var req = this.Bind<AdminUserModificationRequest>();
@@ -30,7 +30,7 @@ namespace AuthN.Modules.Admin {
                 await userManager.updateUserInDatabaseAsync(user);
                 return HttpStatusCode.NoContent;
             });
-            
+
             Get("/metrics/{id}", async args => {
                 var user = await userManager.findUserByIdentifierAsync((string) args.id);
                 var metrics = new UserMetricsService(serverContext, user.identifier).get();

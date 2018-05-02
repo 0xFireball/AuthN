@@ -11,7 +11,7 @@ namespace AuthN.Services.Auth {
         public const string CLAIM_IDENTIFIER = "identifier";
         public const string CLAIM_GROUPS = "groups";
         public const string CLAIM_ADMIN = "admin";
-        
+
         public TokenAuthService(ISContext context) : base(context) { }
 
         public string createToken(UserIdentity user) {
@@ -27,6 +27,7 @@ namespace AuthN.Services.Auth {
             if (serverContext.configuration.admins.Contains(user.identifier)) {
                 tokenBuilder.addClaim(CLAIM_ADMIN, true);
             }
+
             return tokenBuilder.build();
         }
     }

@@ -19,8 +19,7 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 
-namespace AuthN
-{
+namespace AuthN {
     public class Startup {
         private const string config_file_name = "authn.json";
         private const string state_storage_database_file_name = "authn_state.lidb";
@@ -69,13 +68,14 @@ namespace AuthN
 
             // build context
             var context = SConfigurator.createContext(serverConfig);
-            
+
             // import crypto keys
             var privateKeySource = context.configuration.privateKey;
             if (string.IsNullOrEmpty(privateKeySource)) {
                 // generate crypto keys
                 var defaultKeySize = 2048;
-                context.log.writeLine($"Private key not provided, generating new keypair of size {defaultKeySize}", SLogger.LogLevel.Information);
+                context.log.writeLine($"Private key not provided, generating new keypair of size {defaultKeySize}",
+                    SLogger.LogLevel.Information);
                 var gen = new RsaKeyPairGenerator();
                 gen.Init(new KeyGenerationParameters(new SecureRandom(), defaultKeySize));
                 var keyPair = gen.GenerateKeyPair();
@@ -86,8 +86,10 @@ namespace AuthN
                 context.log.writeLine($"private key:\n{privateKeySource}", SLogger.LogLevel.Information);
                 context.log.writeLine($"public key:\n{encodedPublicKey}", SLogger.LogLevel.Information);
             }
+
             // import key pair
-            var privateKey = (RsaPrivateCrtKeyParameters) PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKeySource));
+            var privateKey =
+                (RsaPrivateCrtKeyParameters) PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKeySource));
             context.configuration.crypto = DotNetUtilities.ToRSA(privateKey);
             context.log.writeLine($"Imported private key from configuration", SLogger.LogLevel.Information);
 

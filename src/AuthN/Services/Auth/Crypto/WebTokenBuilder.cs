@@ -19,7 +19,7 @@ namespace AuthN.Services.Auth.Crypto {
             claims.Add(name, value);
             return this;
         }
-        
+
         public WebTokenBuilder expire(DateTime expiry) {
             return addClaim("exp", expiry);
         }

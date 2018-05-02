@@ -27,7 +27,7 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("adminKeys")]
         public string[] adminKeys { get; set; } = new string[0];
-        
+
         /// <summary>
         /// Web token private key
         /// </summary>
@@ -39,7 +39,7 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("corsOrigins")]
         public List<string> corsOrigins { get; set; } = new List<string>();
-        
+
         /// <summary>
         /// List of user identifiers to grant admin permissions
         /// </summary>
@@ -51,7 +51,7 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("maxUsers")]
         public int maxUsers { get; set; } = -1;
-        
+
         /// <summary>
         /// Timespan (expiry) for authentication tokens.
         /// </summary>
@@ -69,7 +69,7 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("persistenceInterval")]
         public int persistenceInterval { get; set; } = 1000 * 60;
-        
+
         /// <summary>
         /// RSA Crypto parameters, imported from privateKey on startup
         /// </summary>

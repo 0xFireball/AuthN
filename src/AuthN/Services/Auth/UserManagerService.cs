@@ -21,6 +21,7 @@ namespace AuthN.Services.Auth {
             if (await findUserByUsernameAsync(regRequest.username) != null) {
                 throw new SecurityException("a user with the same username already exists");
             }
+
             // Calculate cryptographic info
             var cryptoConf = PasswordCryptoConfiguration.createDefault();
             var cryptoHelper = new AuthCryptoHelper(cryptoConf);
@@ -107,6 +108,7 @@ namespace AuthN.Services.Auth {
             if (result) {
                 serverContext.appState.userMetrics.Remove(userId);
             }
+
             return Task.FromResult(result);
         }
 
