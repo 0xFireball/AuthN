@@ -1,11 +1,11 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
-using AuthN.Configuration;
 using Nancy;
 
-namespace AuthN.Modules.Extensions {
-    public static class ModuleSecurityExtensions {
-        public static void assertClaims(this NancyModule module, ISContext context,
+namespace AuthN.Nfx {
+    public static class AuthModuleExtensions {
+        public static void assertClaims(this NancyModule module,
             params string[] requiredClaims) {
             module.Before.AddItemToEndOfPipeline(ctx => {
                 if (ctx.CurrentUser == null) return HttpStatusCode.Unauthorized;
@@ -22,6 +22,10 @@ namespace AuthN.Modules.Extensions {
 
         public static string getClaim(this ClaimsPrincipal identity, string type) {
             return identity.Claims.FirstOrDefault(x => x.Type == type)?.Value;
+        }
+
+        public static IDictionary<string, object> getContextClaims(this NancyContext context) {
+            return (IDictionary<string, object>) context.Items["claims"];
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using AuthN.Configuration;
 using AuthN.Models.Requests.Admin;
-using AuthN.Modules.Extensions;
+using AuthN.Nfx;
 using AuthN.Services.Auth;
 using AuthN.Services.Metrics;
 using AuthN.Utilities;
@@ -12,7 +12,7 @@ namespace AuthN.Modules.Admin {
         private UserManagerService userManager;
 
         public AdministrationModule(ISContext serverContext) : base("/admin", serverContext) {
-            this.assertClaims(serverContext, TokenAuthService.CLAIM_ADMIN);
+            this.assertClaims(TokenAuthService.CLAIM_ADMIN);
             Before += ctx => {
                 userManager = new UserManagerService(serverContext);
                 return null;

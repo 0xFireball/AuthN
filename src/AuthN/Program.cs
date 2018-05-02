@@ -1,23 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
+﻿using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace AuthN {
     public class Program {
         public static void Main(string[] args) {
-            buildWebHost(args).Run();
-        }
+            // boot ASP.NET Core app
 
-        public static IWebHost buildWebHost(string[] args) {
-            return WebHost.CreateDefaultBuilder(args)
+            var config = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "hosting.json"), true)
+                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
+                .Build();
+
+            var host = new WebHostBuilder()
+                .UseConfiguration(config)
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();
+
+            host.Run();
         }
     }
 }

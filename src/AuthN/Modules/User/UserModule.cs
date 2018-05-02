@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using AuthN.Configuration;
+﻿using AuthN.Configuration;
 using AuthN.Models.Requests.User;
 using AuthN.Models.User;
-using AuthN.Modules.Extensions;
+using AuthN.Nfx;
 using AuthN.Services.Auth;
 using AuthN.Services.Metrics;
 using AuthN.Utilities;
@@ -16,7 +14,7 @@ namespace AuthN.Modules.User {
         private UserIdentity user;
 
         public UserModule(ISContext serverContext) : base("/user", serverContext) {
-            this.assertClaims(serverContext, TokenAuthService.CLAIM_USERNAME);
+            this.assertClaims(TokenAuthService.CLAIM_USERNAME);
             Before += ctx => {
                 userManager = new UserManagerService(serverContext);
                 // update metrics
