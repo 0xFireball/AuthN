@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace AuthN.Models.User {
@@ -7,7 +9,12 @@ namespace AuthN.Models.User {
 
         [JsonProperty("email")]
         public string email { get; set; }
-        
+
+        [JsonProperty("groups")]
+        public List<string> groups { get; set; } = new List<string>();
+
+        public string packGroups() => string.Join(",", groups);
+
         [JsonIgnore]
         public ItemCrypto crypto { get; set; }
 

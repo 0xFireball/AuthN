@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using AuthN.Services.Application;
 using AuthN.Utilities;
 using Newtonsoft.Json;
@@ -35,13 +37,25 @@ namespace AuthN.Configuration {
         /// List of origins to allow CORS requests from. Can possibly be used to enable API access from another domain hosting a custom client.
         /// </summary>
         [JsonProperty("corsOrigins")]
-        public string[] corsOrigins { get; set; } = new string[0];
+        public List<string> corsOrigins { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// List of user identifiers to grant admin permissions
+        /// </summary>
+        [JsonProperty("admins")]
+        public List<string> admins { get; set; } = new List<string>();
 
         /// <summary>
         /// Maximum number of registered users. Set to -1 for unlimited.
         /// </summary>
         [JsonProperty("maxUsers")]
         public int maxUsers { get; set; } = -1;
+        
+        /// <summary>
+        /// Timespan (expiry) for authentication tokens.
+        /// </summary>
+        [JsonProperty("tokenValidity")]
+        public TimeSpan tokenValidity { get; set; } = TimeSpan.FromDays(1);
 
         /// <summary>
         /// The verbosity of the application logger.

@@ -25,8 +25,8 @@ namespace AuthN
                     Console.WriteLine($"Configuration file {config_file_name} does not exist, creating default.");
                     var confFileContent = JsonConvert.SerializeObject(new SConfiguration(), Formatting.Indented);
                     File.WriteAllText(config_file_name, confFileContent);
-                } catch {
-                    Console.WriteLine($"Could not write to {config_file_name}");
+                } catch (Exception ex) {
+                    Console.WriteLine($"Could not write to {config_file_name}: {ex}");
                 }
             }
 

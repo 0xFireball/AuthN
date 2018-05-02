@@ -118,6 +118,6 @@ namespace AuthN.Services.Auth {
             lockEntry.releaseExclusiveWrite();
         }
 
-        public int UserIdentityCount => _userCollection.Count();
+        public int userIdentityCount => _userCollection.Count();
     }
 }

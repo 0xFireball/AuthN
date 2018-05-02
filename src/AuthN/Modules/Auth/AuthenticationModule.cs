@@ -5,6 +5,7 @@ using Nancy;
 using Nancy.ModelBinding;
 using AuthN.Configuration;
 using AuthN.Models.Requests.User;
+using AuthN.Models.Responses;
 using AuthN.Models.User;
 using AuthN.Modules.Exceptions;
 using AuthN.Services.Application;
@@ -13,18 +14,18 @@ using AuthN.Utilities;
 
 namespace AuthN.Modules.Auth {
     public class AuthenticationModule : SBaseModule {
-        private UserManagerService _userManager;
-        private TokenAuthService _tokenAuth;
+        private UserManagerService userManager;
+        private TokenAuthService tokenAuther;
 
         public Response bundleAuthorization(UserIdentity user) {
-            var token = _tokenAuth.createToken(user);
-            return Response.asJsonNet(token);
+            var token = tokenAuther.createToken(user);
+            return Response.asJsonNet(new UserAuthorization(user, token));
         }
 
         public AuthenticationModule(ISContext serverContext) : base("/auth", serverContext) {
             Before += ctx => {
-                _userManager = new UserManagerService(serverContext);
-                _tokenAuth = new TokenAuthService(serverContext);
+                userManager = new UserManagerService(serverContext);
+                tokenAuther = new TokenAuthService(serverContext);
                 return null;
             };
 
@@ -36,7 +37,7 @@ namespace AuthN.Modules.Auth {
 
                 try {
                     if (this.serverContext.configuration.maxUsers > -1 &&
-                        _userManager.UserIdentityCount >= this.serverContext.configuration.maxUsers) {
+                        userManager.userIdentityCount >= this.serverContext.configuration.maxUsers) {
                         throw new SecurityException("Maximum number of users for this server reached");
                     }
 
@@ -63,7 +64,7 @@ namespace AuthN.Modules.Auth {
                     }
 
                     // Attempt to register user
-                    var user = await _userManager.registerUserAsync(req);
+                    var user = await userManager.registerUserAsync(req);
 
                     serverContext.log.writeLine($"Registered user {user.username} [{user.identifier}]",
                         SLogger.LogLevel.Information);
@@ -87,13 +88,13 @@ namespace AuthN.Modules.Auth {
             // Log in with username and password
             Post("/login", async args => {
                 var req = this.Bind<UserLoginRequest>();
-                var user = await _userManager.findUserByUsernameAsync(req.username);
+                var user = await userManager.findUserByUsernameAsync(req.username);
 
                 if (user == null) return HttpStatusCode.Unauthorized;
 
                 try {
                     // Validate password
-                    if (user.enabled && await _userManager.checkPasswordAsync(req.password, user)) {
+                    if (user.enabled && await userManager.checkPasswordAsync(req.password, user)) {
                         // Return user details
                         return bundleAuthorization(user);
                     }
@@ -113,15 +114,15 @@ namespace AuthN.Modules.Auth {
                 // Login fields are the same as those for account deletion
                 var req = this.Bind<UserLoginRequest>();
 
-                var user = await _userManager.findUserByUsernameAsync(req.username);
+                var user = await userManager.findUserByUsernameAsync(req.username);
 
                 if (user == null) return HttpStatusCode.Unauthorized;
 
                 try {
                     // Validate password
-                    if (user.enabled && await _userManager.checkPasswordAsync(req.password, user)) {
+                    if (user.enabled && await userManager.checkPasswordAsync(req.password, user)) {
                         // Password was correct, delete account
-                        await _userManager.deleteUserAsync(user.identifier);
+                        await userManager.deleteUserAsync(user.identifier);
 
                         // queue persist
                         this.serverContext.appState.queuePersist();
@@ -136,7 +137,7 @@ namespace AuthN.Modules.Auth {
             // Allow changing passswords
             Patch("/changepassword", async args => {
                 var req = this.Bind<UserPasswordChangeRequest>();
-                var user = await _userManager.findUserByUsernameAsync(req.username);
+                var user = await userManager.findUserByUsernameAsync(req.username);
 
                 try {
                     // Validate password
@@ -148,9 +149,9 @@ namespace AuthN.Modules.Auth {
                         throw new InvalidParameterException("Password may not exceed 128 characters.");
                     }
 
-                    if (user.enabled && await _userManager.checkPasswordAsync(req.oldPassword, user)) {
+                    if (user.enabled && await userManager.checkPasswordAsync(req.oldPassword, user)) {
                         // Update password
-                        await _userManager.changeUserPasswordAsync(user, req.newPassword);
+                        await userManager.changeUserPasswordAsync(user, req.newPassword);
                         return HttpStatusCode.NoContent;
                     }
 
