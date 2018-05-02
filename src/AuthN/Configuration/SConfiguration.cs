@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using AuthN.Services.Application;
 using AuthN.Utilities;
 using Newtonsoft.Json;
@@ -28,10 +29,10 @@ namespace AuthN.Configuration {
         public string[] adminKeys { get; set; } = new string[0];
         
         /// <summary>
-        /// JWT secret
+        /// Web token private key
         /// </summary>
-        [JsonProperty("jwtSecret")]
-        public string jwtSecret { get; set; } = StringUtils.secureRandomString(128);
+        [JsonProperty("privateKey")]
+        public string privateKey { get; set; } = null;
 
         /// <summary>
         /// List of origins to allow CORS requests from. Can possibly be used to enable API access from another domain hosting a custom client.
@@ -68,5 +69,11 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("persistenceInterval")]
         public int persistenceInterval { get; set; } = 1000 * 60;
+        
+        /// <summary>
+        /// RSA Crypto parameters, imported from privateKey on startup
+        /// </summary>
+        [JsonIgnore]
+        public RSA crypto { get; set; }
     }
 }

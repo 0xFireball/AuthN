@@ -1,8 +1,9 @@
 ﻿using System;
 using AuthN.Configuration;
 using AuthN.Models.User;
-using JWT.Algorithms;
+using AuthN.Services.Auth.Crypto;
 using JWT.Builder;
+using RS256Algorithm = JWT.Algorithms.RS256Algorithm;
 
 namespace AuthN.Services.Auth {
     public class TokenAuthService : DependencyObject {
@@ -14,20 +15,19 @@ namespace AuthN.Services.Auth {
         public TokenAuthService(ISContext context) : base(context) { }
 
         public string createToken(UserIdentity user) {
-            var tokenBuilder = new JwtBuilder()
-                .WithAlgorithm(new HMACSHA384Algorithm())
-                .WithSecret(serverContext.configuration.jwtSecret);
+            var tokenBuilder = new WebTokenBuilder()
+                .withAlgorithm(new RS384Algorithm(serverContext.configuration.crypto));
             // add user claims
             tokenBuilder
-                .AddClaim(CLAIM_USERNAME, user.username)
-                .AddClaim(CLAIM_IDENTIFIER, user.identifier)
-                .AddClaim(CLAIM_GROUPS, user.packGroups())
-                .ExpirationTime(DateTime.Now.Add(serverContext.configuration.tokenValidity));
+                .addClaim(CLAIM_USERNAME, user.username)
+                .addClaim(CLAIM_IDENTIFIER, user.identifier)
+                .addClaim(CLAIM_GROUPS, user.packGroups())
+                .expire(DateTime.Now.Add(serverContext.configuration.tokenValidity));
             // check special users
             if (serverContext.configuration.admins.Contains(user.identifier)) {
-                tokenBuilder.AddClaim(CLAIM_ADMIN, true);
+                tokenBuilder.addClaim(CLAIM_ADMIN, true);
             }
-            return tokenBuilder.Build();
+            return tokenBuilder.build();
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using AuthN.Configuration;
+using AuthN.Services.Auth.Crypto;
 using JWT;
-using JWT.Builder;
 using Nancy;
 
 namespace AuthN.Modules.Extensions {
@@ -20,10 +20,10 @@ namespace AuthN.Modules.Extensions {
                     var authToken = ctx.Request.Headers.Authorization;
                     if (string.IsNullOrEmpty(authToken)) return HttpStatusCode.Unauthorized;
 
-                    claims = new JwtBuilder()
-                        .WithSecret(context.configuration.jwtSecret)
-                        .MustVerifySignature()
-                        .Decode<IDictionary<string, object>>(authToken);
+                    claims = new WebTokenBuilder()
+                        .withAlgorithm(new RS384Algorithm(context.configuration.crypto))
+                        .mustVerify()
+                        .decode(authToken);
 
                     foreach (var requiredClaim in requiredClaims) {
                         if (!claims.ContainsKey(requiredClaim)) {

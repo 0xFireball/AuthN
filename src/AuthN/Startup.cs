@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using AuthN.Configuration;
 using AuthN.Services.Application;
 using Microsoft.AspNetCore.Builder;
@@ -10,6 +12,12 @@ using Microsoft.Extensions.Logging;
 using Nancy;
 using Nancy.Owin;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
 
 namespace AuthN
 {
@@ -61,6 +69,27 @@ namespace AuthN
 
             // build context
             var context = SConfigurator.createContext(serverConfig);
+            
+            // import crypto keys
+            var privateKeySource = context.configuration.privateKey;
+            if (string.IsNullOrEmpty(privateKeySource)) {
+                // generate crypto keys
+                var defaultKeySize = 2048;
+                context.log.writeLine($"Private key not provided, generating new keypair of size {defaultKeySize}", SLogger.LogLevel.Information);
+                var gen = new RsaKeyPairGenerator();
+                gen.Init(new KeyGenerationParameters(new SecureRandom(), defaultKeySize));
+                var keyPair = gen.GenerateKeyPair();
+                var privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(keyPair.Private);
+                var publicKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(keyPair.Public);
+                privateKeySource = Convert.ToBase64String(privateKeyInfo.ToAsn1Object().GetDerEncoded());
+                var encodedPublicKey = Convert.ToBase64String(publicKeyInfo.ToAsn1Object().GetDerEncoded());
+                context.log.writeLine($"private key:\n{privateKeySource}", SLogger.LogLevel.Information);
+                context.log.writeLine($"public key:\n{encodedPublicKey}", SLogger.LogLevel.Information);
+            }
+            // import key pair
+            var privateKey = (RsaPrivateCrtKeyParameters) PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKeySource));
+            context.configuration.crypto = DotNetUtilities.ToRSA(privateKey);
+            context.log.writeLine($"Imported private key from configuration", SLogger.LogLevel.Information);
 
             context.log.writeLine("Server context created", SLogger.LogLevel.Information);
 
