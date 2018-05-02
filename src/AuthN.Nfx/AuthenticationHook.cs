@@ -20,6 +20,7 @@ namespace AuthN.Nfx {
                         new ClaimsPrincipal(
                             new ClaimsIdentity(claims.Select(x => new Claim(x.Key, x.Value.ToString())))
                         );
+                    ctx.Items["claims"] = claims;
 
                     return null;
                 } catch {

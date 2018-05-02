@@ -27,6 +27,12 @@ namespace AuthN.Configuration {
         /// </summary>
         [JsonProperty("adminKeys")]
         public string[] adminKeys { get; set; } = new string[0];
+        
+        /// <summary>
+        /// The identifier for this authentication server
+        /// </summary>
+        [JsonProperty("authServerId")]
+        public string authServerId { get; set; } = StringUtils.secureRandomString(12);
 
         /// <summary>
         /// Web token private key

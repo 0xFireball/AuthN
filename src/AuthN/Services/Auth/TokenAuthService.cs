@@ -5,6 +5,7 @@ using AuthN.Nfx.WebTokens;
 
 namespace AuthN.Services.Auth {
     public class TokenAuthService : DependencyObject {
+        public const string CLAIM_SERVER = "server";
         public const string CLAIM_USERNAME = "username";
         public const string CLAIM_IDENTIFIER = "identifier";
         public const string CLAIM_GROUPS = "groups";
@@ -17,6 +18,7 @@ namespace AuthN.Services.Auth {
                 .withAlgorithm(new RS384Algorithm(serverContext.configuration.crypto));
             // add user claims
             tokenBuilder
+                .addClaim(CLAIM_SERVER, serverContext.configuration.authServerId)
                 .addClaim(CLAIM_USERNAME, user.username)
                 .addClaim(CLAIM_IDENTIFIER, user.identifier)
                 .addClaim(CLAIM_GROUPS, user.packGroups())
