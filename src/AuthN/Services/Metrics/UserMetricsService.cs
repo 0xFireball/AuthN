@@ -12,5 +12,10 @@ namespace AuthN.Services.Metrics {
         public UserMetrics get() {
             return serverContext.appState.userMetrics[_userIdentifier];
         }
+
+        public void logEvent(MetricsEventType eventType = MetricsEventType.Unspecified) {
+            var metrics = get();
+            metrics.events.Add(new MetricsEvent(eventType));
+        }
     }
 }

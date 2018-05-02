@@ -10,6 +10,7 @@ using AuthN.Models.User;
 using AuthN.Modules.Exceptions;
 using AuthN.Services.Application;
 using AuthN.Services.Auth;
+using AuthN.Services.Metrics;
 using AuthN.Utilities;
 
 namespace AuthN.Modules.Auth {
@@ -65,6 +66,9 @@ namespace AuthN.Modules.Auth {
 
                     // Attempt to register user
                     var user = await userManager.registerUserAsync(req);
+                    // update metrics
+                    new UserMetricsService(serverContext, user.identifier)
+                        .logEvent(MetricsEventType.Auth);
 
                     serverContext.log.writeLine($"Registered user {user.username} [{user.identifier}]",
                         SLogger.LogLevel.Information);
@@ -95,6 +99,9 @@ namespace AuthN.Modules.Auth {
                 try {
                     // Validate password
                     if (user.enabled && await userManager.checkPasswordAsync(req.password, user)) {
+                        // update metrics
+                        new UserMetricsService(serverContext, user.identifier)
+                            .logEvent(MetricsEventType.Auth);
                         // Return user details
                         return bundleAuthorization(user);
                     }
@@ -134,8 +141,8 @@ namespace AuthN.Modules.Auth {
                 } catch { return HttpStatusCode.Unauthorized; }
             });
 
-            // Allow changing passswords
-            Patch("/changepassword", async args => {
+            // Password change
+            Patch("/pass", async args => {
                 var req = this.Bind<UserPasswordChangeRequest>();
                 var user = await userManager.findUserByUsernameAsync(req.username);
 
@@ -150,6 +157,9 @@ namespace AuthN.Modules.Auth {
                     }
 
                     if (user.enabled && await userManager.checkPasswordAsync(req.oldPassword, user)) {
+                        // update metrics
+                        new UserMetricsService(serverContext, user.identifier)
+                            .logEvent(MetricsEventType.UpdateAuth);
                         // Update password
                         await userManager.changeUserPasswordAsync(user, req.newPassword);
                         return HttpStatusCode.NoContent;

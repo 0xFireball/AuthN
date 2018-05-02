@@ -2,6 +2,7 @@
 using AuthN.Models.Requests.Admin;
 using AuthN.Modules.Extensions;
 using AuthN.Services.Auth;
+using AuthN.Services.Metrics;
 using AuthN.Utilities;
 using Nancy;
 using Nancy.ModelBinding;
@@ -28,6 +29,12 @@ namespace AuthN.Modules.Admin {
                 req.apply(user);
                 await userManager.updateUserInDatabaseAsync(user);
                 return HttpStatusCode.NoContent;
+            });
+            
+            Get("/metrics/{id}", async args => {
+                var user = await userManager.findUserByIdentifierAsync((string) args.id);
+                var metrics = new UserMetricsService(serverContext, user.identifier).get();
+                return Response.asJsonNet(metrics);
             });
         }
     }
