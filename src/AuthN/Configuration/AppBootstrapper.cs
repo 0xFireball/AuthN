@@ -1,7 +1,6 @@
-using System.Linq;
-using System.Security.Claims;
 using AuthN.Configuration;
-using AuthN.Services.Auth.Crypto;
+using AuthN.Nfx;
+using AuthN.Nfx.WebTokens;
 using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.TinyIoc;
@@ -17,27 +16,8 @@ namespace AuthN {
         protected override void ApplicationStartup(TinyIoCContainer container, IPipelines pipelines) {
             base.ApplicationStartup(container, pipelines);
 
-            // Authorization token
-            pipelines.BeforeRequest.AddItemToEndOfPipeline(ctx => {
-                var authToken = ctx.Request.Headers.Authorization;
-                if (string.IsNullOrEmpty(authToken)) return null;
-
-                try {
-                    var claims = new WebTokenBuilder()
-                        .withAlgorithm(new RS384Algorithm(serverContext.configuration.crypto))
-                        .mustVerify()
-                        .decode(authToken);
-
-                    ctx.CurrentUser =
-                        new ClaimsPrincipal(
-                            new ClaimsIdentity(claims.Select(x => new Claim(x.Key, x.Value.ToString())))
-                        );
-
-                    return null;
-                } catch {
-                    return null;
-                }
-            });
+            // Authorization token support
+            AuthenticationHook.install(pipelines, new RS384Algorithm(serverContext.configuration.crypto));
 
             // Enable CORS
             pipelines.AfterRequest.AddItemToEndOfPipeline(ctx => {

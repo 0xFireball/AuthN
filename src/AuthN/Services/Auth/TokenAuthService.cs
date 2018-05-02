@@ -1,9 +1,7 @@
 ﻿using System;
 using AuthN.Configuration;
 using AuthN.Models.User;
-using AuthN.Services.Auth.Crypto;
-using JWT.Builder;
-using RS256Algorithm = JWT.Algorithms.RS256Algorithm;
+using AuthN.Nfx.WebTokens;
 
 namespace AuthN.Services.Auth {
     public class TokenAuthService : DependencyObject {

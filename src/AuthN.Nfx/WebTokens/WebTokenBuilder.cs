@@ -4,7 +4,7 @@ using System.Text;
 using JWT;
 using Newtonsoft.Json;
 
-namespace AuthN.Services.Auth.Crypto {
+namespace AuthN.Nfx.WebTokens {
     public class WebTokenBuilder {
         private ITokenCryptoAlgorithm algorithm;
         private Dictionary<string, object> claims = new Dictionary<string, object>();

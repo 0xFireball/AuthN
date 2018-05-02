@@ -6,11 +6,15 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BouncyCastle" Version="1.8.2" />
-    <PackageReference Include="JWT" Version="4.0.0" />
     <PackageReference Include="LiteDB" Version="4.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AuthN.Nfx\AuthN.Nfx.csproj">
+      <Project>{9BB87978-BFFF-423E-B019-734ADC5DB67C}</Project>
+      <Name>AuthN.Nfx</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

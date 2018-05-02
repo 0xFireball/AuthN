@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace AuthN.Services.Auth.Crypto {
+namespace AuthN.Nfx.WebTokens {
     public class RS384Algorithm : ITokenCryptoAlgorithm {
         public RSA rsa { get; }
 
