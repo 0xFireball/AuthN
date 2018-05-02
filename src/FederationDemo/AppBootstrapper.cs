@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using AuthN.Nfx;
 using AuthN.Nfx.WebTokens;
@@ -35,12 +36,12 @@ namespace FederationDemo {
                 publicKeys.Add(DotNetUtilities.ToRSA(publicKey));
             }
 
-            AuthenticationHook.install(pipelines, new RS384Algorithm(publicKeys[0]));
+            AuthenticationHook.install(pipelines, publicKeys.Select(x => new RS384Algorithm(x)));
         }
 
         public override void Configure(INancyEnvironment environment) {
             base.Configure(environment);
-            
+
             environment.Diagnostics(true, "password");
         }
     }
